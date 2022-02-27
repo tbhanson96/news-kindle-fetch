@@ -1,0 +1,44 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "name": "Debug Docker",
+            "request": "attach",
+            "preLaunchTask": "start-docker",
+            "address": "localhost",
+            "remoteRoot": "/opt/app",
+            "localRoot": "${workspaceFolder}",
+            "sourceMapPathOverrides": {
+                "/opt/app/*": "${workspaceFolder}/*"
+            },
+            "port": 9229,
+            "timeout": 120000
+        },
+        {
+            "type": "pwa-node",
+            "request": "launch",
+            "name": "Debug Tests",
+            "runtimeExecutable": "npm",
+            "cwd": "${workspaceRoot}",
+            "runtimeArgs": [
+                "run",
+                "test:debug"
+            ],
+            "port": 9229
+        },
+        {
+            "name": "Debug",
+            "type": "node",
+            "request": "launch",
+            "runtimeVersion": "16",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "start:debug"],
+            "cwd": "${workspaceRoot}",
+            "outFiles": [
+                "${workspaceFolder}/dist/*.js",
+                "!**/node_modules/**"
+            ]
+        }
+    ]
+}
