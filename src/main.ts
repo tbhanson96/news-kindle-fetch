@@ -1,36 +1,74 @@
 import { Calibre } from 'node-calibre';
 import nodemailer from 'nodemailer';
+import fs from 'fs/promises';
+import path from 'path';
+import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
-// const mailer = nodemailer.createTransport({
-//     host: this.configService.env.EMAIL_HOST,
-//     port: this.configService.env.EMAIL_PORT,
-//     secure: true,
-//     auth: {
-//         type: 'OAuth2',
-//         user: this.configService.env.EMAIL_ADDRESS,
-//         clientId: this.configService.env.EMAIL_CLIENT_OAUTH_ID,
-//         clientSecret: this.configService.env.EMAIL_CLIENT_OAUTH_SECRET,
-//         refreshToken: this.configService.env.EMAIL_CLIENT_OAUTH_REFRESH_TOKEN,
-//     },
-// });
+const senderEmail = 'tbh20715@gmail.com';
+const recipientEmail = 'tbhanson96@kindle.com';
+const emailHost = 'smtp.gmail.com';
+const emailPort = 465;
+
+const clientId = process.env.OAUTH_ID;
+const clientSecret = process.env.OAUTH_SECRET;
+const refreshToken = process.env.OAUTH_REFRESH_TOKEN;
+
+if (!clientId || !clientSecret || !refreshToken) {
+    console.log('Missing email OAUTH credentials, exiting..');
+    process.exit(1);
+}
+
+const mailer = nodemailer.createTransport({
+    host: emailHost,
+    port: emailPort,
+    secure: true,
+    auth: {
+        type: 'OAuth2',
+        user: senderEmail,
+        clientId,
+        clientSecret,
+        refreshToken,
+    },
+});
 
 const calibre = new Calibre();
 
 const today = new Date();
 const run = async () => {
+    const outputFile = `${today.getMonth()+1}-${today.getDate()}-${today.getFullYear()}-nytimes.mobi`;
     try {
         await calibre.run("ebook-convert",
             [
                 'nytimes.recipe',
-                `${today.getDate()}-${today.getMonth()+1}-${today.getFullYear()}-nytimes.mobi`,
+                outputFile,
             ],
             {
-                'output-profile': 'kindle'
+                'output-profile': 'kindle',
             }
         );
-        console.log('finisehd');
     } catch (err) {
         console.log(`Error occured: ${err}`);
     }
+    console.log('Finished creating mobi file');
+    await fs.copyFile(outputFile, path.join('out', outputFile));
+
+    let options: SMTPTransport.Options = {
+        from: senderEmail,
+        to: recipientEmail,
+        attachments: [
+            {
+                path: outputFile,
+            },
+        ],
+    };
+    return new Promise<void>((res, rej) => {
+        mailer.sendMail(options, (err, info) => {
+            if (err) {
+                rej(err);
+            } else {
+                res();
+            }
+        });
+    }); 
 };
 run();
