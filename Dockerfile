@@ -11,7 +11,7 @@ ENV OAUTH_REFRESH_TOKEN=oauth_refresh_token
 
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
-RUN mkdir mnt
+RUN mkdir out
 
 COPY package*.json ./
 RUN npm install
