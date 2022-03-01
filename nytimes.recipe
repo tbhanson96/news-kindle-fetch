@@ -102,7 +102,8 @@ class NewYorkTimes(BasicNewsRecipe):
         dict(id=lambda x: x and x.startswith('story-ad-')),
         dict(name='head'),
         dict(role='toolbar'),
-        dict(role='navigation'),
+        dict(role='navigation'), # remove top links on web articles
+        dict(role='complementary'), #remove live updates
         dict(name='a', href=lambda x: x and '#story-continues-' in x),
         dict(name='a', href=lambda x: x and '#whats-next' in x),
         dict(id=lambda x: x and 'sharetools-' in x),
