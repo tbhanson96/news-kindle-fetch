@@ -80,7 +80,8 @@ class NewYorkTimes(BasicNewsRecipe):
         title = 'The New York Times (Web)'
         description = 'New York Times (Web). You can edit the recipe to remove sections you are not interested in.'
     else:
-        title = 'The New York Times'
+        date = format_date(datetime.date.today())
+        title = 'The New York Times [' + date + ']'
         description = 'Today\'s New York Times'
     encoding = 'utf-8'
     __author__ = 'Kovid Goyal'

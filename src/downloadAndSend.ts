@@ -65,8 +65,10 @@ const downloadAndSend = async (send: boolean) => {
         if (send) {
             mailer.sendMail(options, (err, info) => {
                 if (err) {
+                    console.log('Failed to send book to kindle: ' + err);
                     rej(err);
                 } else {
+                    console.log('Successfully sent book to kindle!');
                     res();
                 }
             });
