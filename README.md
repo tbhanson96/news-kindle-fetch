@@ -1,4 +1,4 @@
-# node-docker-starter
+# NY Times kindle fetcher 
 Docker image for fetching the latest NYT article, converting to .mobi, and emailing it to kindle email of choice.
 
 ## Usage
