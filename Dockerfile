@@ -7,6 +7,8 @@ RUN wget --no-check-certificate -nv -O- https://download.calibre-ebook.com/linux
 RUN curl -sL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - 
 RUN apt-get install -y nodejs
 
+RUN apt-get install -y imagemagick
+
 ENV OAUTH_ID=oauth_id
 ENV OAUTH_SECRET=oauth_secret
 ENV OAUTH_REFRESH_TOKEN=oauth_refresh_token
@@ -19,5 +21,7 @@ COPY package*.json ./
 RUN npm install
 COPY dist ./dist
 COPY nytimes.recipe ./
+COPY convert.sh ./
+COPY nytimes.png ./
 
 CMD [ "npm", "run", "start:prod" ]

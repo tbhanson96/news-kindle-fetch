@@ -1,7 +1,8 @@
 import { Calibre } from 'node-calibre';
 import nodemailer from 'nodemailer';
-import fs from 'fs/promises';
 import path from 'path';
+import { exec } from 'child_process';
+import util from 'util';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 const downloadAndSend = async (send: boolean) => {
@@ -35,8 +36,13 @@ const downloadAndSend = async (send: boolean) => {
     const calibre = new Calibre();
 
     const today = new Date();
-    const outputFile = `${today.getMonth()+1}-${today.getDate()}-${today.getFullYear()}-nytimes.mobi`;
+    const fileDate = `${today.getMonth()+1}-${today.getDate()}-${today.getFullYear()}`;
+    const labelDate = today.toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' });
+    const outputFile = path.join('out', `${fileDate}-nytimes.mobi`);
     try {
+        console.log('Creating cover image...');
+        await createCoverImage();
+        console.log(`Starting fetch of latest ${fileDate} NY times article...`);
         await calibre.run("ebook-convert",
             [
                 'nytimes.recipe',
@@ -47,10 +53,9 @@ const downloadAndSend = async (send: boolean) => {
             }
         );
     } catch (err) {
-        console.log(`Error occured: ${err}`);
+        console.log('Error occured:', err);
     }
     console.log('Finished creating mobi file');
-    await fs.copyFile(outputFile, path.join('out', outputFile));
 
     let options: SMTPTransport.Options = {
         from: senderEmail,
@@ -65,7 +70,7 @@ const downloadAndSend = async (send: boolean) => {
         if (send) {
             mailer.sendMail(options, (err, info) => {
                 if (err) {
-                    console.log('Failed to send book to kindle: ' + err);
+                    console.log('Failed to send book to kindle:', err);
                     rej(err);
                 } else {
                     console.log('Successfully sent book to kindle!');
@@ -79,4 +84,17 @@ const downloadAndSend = async (send: boolean) => {
     }); 
 };
 
-export default downloadAndSend;
+const createCoverImage = async () => {
+    const today = new Date();
+    let labelDate = today.toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' });
+    const execAsync = util.promisify(exec);
+    try {
+        const { stdout, stderr } = await execAsync(`sh convert.sh \"${labelDate}\" ${path.join('out', 'date.png')} ${path.join('out', 'cover.png')}`);
+        console.log('imagemagick:', stdout);
+        console.error('imagemagick:', stderr);
+    } catch (e) {
+        console.error('Could not create cover image: ', e);
+    }
+};
+
+export { downloadAndSend };

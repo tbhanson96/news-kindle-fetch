@@ -81,7 +81,7 @@ class NewYorkTimes(BasicNewsRecipe):
         description = 'New York Times (Web). You can edit the recipe to remove sections you are not interested in.'
     else:
         date = format_date(datetime.date.today())
-        title = 'The New York Times [' + date + ']'
+        title = 'The New York Times' + date
         description = 'Today\'s New York Times'
     encoding = 'utf-8'
     __author__ = 'Kovid Goyal'
@@ -99,6 +99,7 @@ class NewYorkTimes(BasicNewsRecipe):
         dict(href='#site-content #site-index'.split()),
         dict(attrs={'aria-hidden':'true'}),
         dict(attrs={'data-videoid':True}),
+        dict(attrs={'data-testid':'live-blog-byline'}),
         dict(name='button meta link'.split()),
         dict(id=lambda x: x and x.startswith('story-ad-')),
         dict(name='head'),
@@ -181,7 +182,7 @@ class NewYorkTimes(BasicNewsRecipe):
         soup = self.read_todays_paper()
         pdate = soup.find('meta', attrs={'name':'pdate', 'content': True})['content']
         date = strptime(pdate, '%Y%m%d', assume_utc=False, as_utc=False)
-        self.cover_url = 'https://m.media-amazon.com/images/I/31B-jyc2D5L.jpg'
+        self.cover_url = 'file:///opt/app/out/cover.png'
         self.timefmt = strftime(' [%d %b, %Y]', date)
         return soup
 
