@@ -18,7 +18,7 @@ WORKDIR /opt/app
 RUN mkdir out
 
 COPY package*.json ./
-RUN npm install
+RUN npm install --production
 COPY dist ./dist
 COPY nytimes.recipe ./
 COPY convert.sh ./
