@@ -38,7 +38,7 @@ const downloadAndSend = async (send: boolean) => {
     const today = new Date();
     const fileDate = `${today.getMonth()+1}-${today.getDate()}-${today.getFullYear()}`;
     const labelDate = today.toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' });
-    const outputFile = path.join('out', `${fileDate}-nytimes.epub`);
+    const outputFile = path.join('out', `${fileDate}-nytimes.mobi`);
     try {
         console.log('Creating cover image...');
         await createCoverImage();
@@ -55,7 +55,7 @@ const downloadAndSend = async (send: boolean) => {
     } catch (err) {
         console.log('Error occured:', err);
     }
-    console.log('Finished creating epub file');
+    console.log('Finished creating mobi file');
 
     let options: SMTPTransport.Options = {
         from: senderEmail,

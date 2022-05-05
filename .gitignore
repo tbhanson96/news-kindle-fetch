@@ -104,4 +104,3 @@ out
 # TernJS port file
 .tern-port
 *.mobi
-package-lock.json
