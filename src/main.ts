@@ -1,2 +1,2 @@
 import { downloadAndSend } from "./downloadAndSend";
-downloadAndSend(true);
+downloadAndSend(false);
