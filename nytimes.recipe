@@ -130,7 +130,7 @@ class NewYorkTimes(BasicNewsRecipe):
         soup = self.read_todays_paper()
         pdate = soup.find('meta', attrs={'name':'pdate', 'content': True})['content']
         date = strptime(pdate, '%Y%m%d', assume_utc=False, as_utc=False)
-        self.cover_url = 'file:///opt/app/out/cover.png'
+        self.cover_url = 'file:///opt/app/out/ny-times-cover.png'
         self.timefmt = strftime(' [%d %b, %Y]', date)
         return soup
 
