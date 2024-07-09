@@ -1,5 +1,5 @@
 {
-  "name": "nytimes-kindle-fetch",
+  "name": "news-kindle-fetch",
   "version": "1.0.0",
   "description": "Nodejs app template",
   "main": "main.js",
@@ -22,14 +22,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tbhanson96/node-nytimes-kindle-fetch.git"
+    "url": "git+https://github.com/tbhanson96/node-news-kindle-fetch.git"
   },
   "author": "Tim Hanson",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/tbhanson96/node-nytimes-kindle-fetch/issues"
+    "url": "https://github.com/tbhanson96/node-news-kindle-fetch/issues"
   },
-  "homepage": "https://github.com/tbhanson96/node-nytimes-kindle-fetch#readme",
+  "homepage": "https://github.com/tbhanson96/node-news-kindle-fetch#readme",
   "devDependencies": {
     "@types/command-line-args": "^5.2.3",
     "@types/jest": "^29.5.11",
