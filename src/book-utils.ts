@@ -27,10 +27,10 @@ const economist = async () => {
                 outputFile,
             ],
         );
-        return outputFile;
     } catch (err) {
         console.log('Error occured:', err);
     }
+    return outputFile;
 }
 
 /**
@@ -50,10 +50,10 @@ const nyTimes = async () => {
                 outputFile,
             ],
         );
-        return outputFile;
     } catch (err) {
         console.log('Error occured:', err);
     }
+    return outputFile;
 }
 
 const sendEpubs = async (files: string[]) => {
