@@ -21,7 +21,7 @@ jobs:
       - name: Build 
         run: npm run build:prod
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         id: restore-dependencies-cache
         with:
           path: |
@@ -39,7 +39,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ steps.nvm.outputs.NODE_VERSION}}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         id: restore-dependencies-cache
         with:
           path: |
@@ -60,7 +60,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ steps.nvm.outputs.NODE_VERSION}}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         id: restore-dependencies-cache
         with:
           path: |
