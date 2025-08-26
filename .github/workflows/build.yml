@@ -6,7 +6,7 @@ on: push
 jobs:
   build:
     name: Build project
-    runs-on: ubuntu-latest-arm64
+    runs-on: ubuntu-24.04-arm 
     steps:
       - uses: actions/checkout@v2
       - run: echo ::set-output name=NODE_VERSION::$(cat .nvmrc)
@@ -30,7 +30,7 @@ jobs:
   
   test:
     name: Test Project
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm 
     needs: build
     steps:
       - uses: actions/checkout@v2
@@ -51,7 +51,7 @@ jobs:
   deploy:
     name: Deploy
     if: ${{ github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm 
     needs: [build, test]
     steps:
       - uses: actions/checkout@v2
