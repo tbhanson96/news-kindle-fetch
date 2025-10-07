@@ -1,4 +1,6 @@
 #!/usr/bin/env  python
+# License: GPLv3 Copyright: 2008, Kovid Goyal <kovid at kovidgoyal.net>
+
 import json
 import time
 from datetime import datetime, timedelta
@@ -11,7 +13,6 @@ from mechanize import Request
 
 from calibre import browser
 from calibre.ptempfile import PersistentTemporaryFile
-from calibre.utils.date import parse_only_date
 from calibre.web.feeds.news import BasicNewsRecipe
 
 
@@ -91,7 +92,7 @@ def process_web_node(node):
     elif ntype in ['PARAGRAPH', 'BOOK_INFO']:
         if node.get('textHtml'):
             return f'\n<p>{node.get("textHtml")}</p>'
-        elif node.get('textJson'):
+        if node.get('textJson'):
             return f'\n<p>{parse_textjson(node["textJson"])}</p>'
         return f'\n<p>{node.get("text", "")}</p>'
     elif (ntype == 'IMAGE') or (node.get('__typename', '') == 'ImageComponent'):
@@ -108,13 +109,13 @@ def process_web_node(node):
     elif ntype == 'PULL_QUOTE':
         if node.get('textHtml'):
             return f'<blockquote>{node.get("textHtml")}</blockquote>'
-        elif node.get('textJson'):
+        if node.get('textJson'):
             return f'<blockquote>{parse_textjson(node["textJson"])}</blockquote>'
         return f'<blockquote>{node.get("text", "")}</blockquote>'
     elif ntype == 'BLOCK_QUOTE':
         if node.get('textHtml'):
             return f'<blockquote><i>{node.get("textHtml")}</i></blockquote>'
-        elif node.get('textJson'):
+        if node.get('textJson'):
             return f'<blockquote><i>{parse_textjson(node["textJson"])}</i></blockquote>'
         return f'<blockquote><i>{node.get("text", "")}</i></blockquote>'
     elif ntype == 'DIVIDER':
@@ -132,17 +133,10 @@ def process_web_node(node):
     return ''
 
 
-def load_article_from_json(raw):
+def load_article_from_web_json(raw):
     # open('/t/raw.json', 'w').write(raw)
     body = ''
-    try:
-        data = json.loads(raw)['data']['findArticleByUrl']
-    except Exception:
-        try:
-            data = json.loads(raw)['props']['pageProps']['cp2Content']
-        except Exception:
-            data = json.loads(raw)['props']['pageProps']['content']
-
+    data = json.loads(raw)['data']['findArticleByUrl']
     body += f'<div style="color: red; font-size:small; font-weight:bold;">{data.get("flyTitle", "")}</div>'
     body += f'<h1>{data["headline"]}</h1>'
     if data.get('rubric') and data.get('rubric') is not None:
@@ -200,69 +194,67 @@ def process_url(url):
     return url
 
 
-class Economist(BasicNewsRecipe):
-    title = 'The Economist'
+class EconomistNews(BasicNewsRecipe):
+    title = 'The Economist News'
     language = 'en_GB'
     encoding = 'utf-8'
     masthead_url = 'https://www.livemint.com/lm-img/dev/economist-logo-oneline.png'
 
-    __author__ = 'Kovid Goyal, unkn0wn'
+    __author__ = 'unkn0wn'
     description = (
         'Global news and current affairs from a European'
-        ' perspective. Best downloaded on Friday mornings (GMT)'
+        ' perspective. Get the latest articles here.'
     )
     extra_css = '''
-        em { color:#202020; }
+        em, blockquote { color:#202020; }
         img {display:block; margin:0 auto;}
     '''
 
+    cover_url = 'https://m.media-amazon.com/images/M/MV5BNzJiZGYzNzgtNWY5Yi00NWYyLThmZGUtODQyM2ZkOWVlMDI1XkEyXkFqcGc@.jpg'
+    oldest_article = 15
     resolve_internal_links = True
 
+    # economist.com has started throttling after about 60% of the total has
+    # downloaded with connection reset by peer (104) errors.
     delay = 1
+
+    remove_empty_feeds = True
+    ignore_duplicate_articles = {'title'}
+
     browser_type = 'webengine'
-    from_web = True
+
+    needs_subscription = False
+
     recipe_specific_options = {
-        'date': {
-            'short': 'The date of the edition to download (YYYY-MM-DD format)',
-            'long': 'For example, 2024-07-19',
+        'days': {
+            'short': 'Oldest article to download from this news source. In days ',
+            'long': 'For example, 0.5, gives you articles from the past 12 hours',
+            'default': str(oldest_article),
         },
         'res': {
             'short': 'For hi-res images, select a resolution from the\nfollowing options: 834, 960, 1096, 1280, 1424',
             'long': 'This is useful for non e-ink devices, and for a lower file size\nthan the default, use from 480, 384, 360, 256.',
             'default': '600',
         },
-        'de': {
-            'short': 'Web Edition',
-            'long': 'Yes/No. Digital Edition does not skip interactive articles.',
-            'default': 'No',
-        },
     }
 
+    def __init__(self, *args, **kwargs):
+        BasicNewsRecipe.__init__(self, *args, **kwargs)
+        d = self.recipe_specific_options.get('days')
+        print('init')
+        if d and isinstance(d, str):
+            self.oldest_article = float(d)
+
     def get_browser(self, *args, **kwargs):
-        if self.from_web:
-            kwargs['user_agent'] = (
-                'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.6533.103 Mobile Safari/537.36 Liskov'
-            )
-        else:
-            kwargs['user_agent'] = 'okhttp/4.12.0'
+        kwargs['user_agent'] = 'okhttp/4.12.0'
         br = BasicNewsRecipe.get_browser(self, *args, **kwargs)
+        print('got browser')
         return br
 
-    def canonicalize_internal_url(self, url, is_link=True):
-        if url.endswith('/print'):
-            url = url.rpartition('/')[0]
-        return BasicNewsRecipe.canonicalize_internal_url(self, url, is_link=is_link)
-
-    def publication_date(self):
-        edition_date = self.recipe_specific_options.get('date')
-        if edition_date and isinstance(edition_date, str):
-            return parse_only_date(edition_date, as_utc=False)
-        try:
-            url = self.browser.open('https://www.economist.com/printedition').geturl()
-        except Exception as e:
-            self.log('Failed to fetch publication date with error: ' + str(e))
-            return super().publication_date()
-        return parse_only_date(url.split('/')[-1], as_utc=False)
+    def economist_test_article(self):
+        return [('Articles', [{'title': 'test',
+            'url': 'https://www.economist.com/letters/2025/07/17/the-politicisation-of-the-federal-reserve'
+        }])]
 
     def economist_return_index(self, ans):
         if not ans:
@@ -274,79 +266,52 @@ class Economist(BasicNewsRecipe):
             )
         return ans
 
-    def economist_test_article(self):
-        self.from_web = False
-        return [('Articles', [{'title': 'test',
-            'url': 'https://www.economist.com/china/2025/09/10/china-is-ditching-the-dollar-fast'
-        }])]
-
     def parse_index(self):
         # return self.economist_test_article()
-        edition_date = self.recipe_specific_options.get('date')
-        if edition_date and isinstance(edition_date, str):
-            url = 'https://www.economist.com/weeklyedition/' + edition_date
-            self.timefmt = ' [' + edition_date + ']'
-        else:
-            url = 'https://www.economist.com/weeklyedition'
-        soup = self.index_to_soup(url)
-        ans = self.economist_parse_index(soup)
+        query = {
+            'operationName': 'FindHomepage',
+            'variables': '{"homepageType":"MOBILE"}',
+            'query': 'query FindHomepage($homepageType: HomepageType!) { findHomepage(homepageType: $homepageType) { __typename ...HomepageFragment } }  fragment CtaFragment on Cta { link text }  fragment ContentIdentityFragment on ContentIdentity { articleType forceAppWebView leadMediaType }  fragment ImageTeaserFragment on ImageComponent { altText height imageType source url width }  fragment NarrationFragment on Narration { album bitrate duration filename id provider url }  fragment PodcastAudioFragment on PodcastEpisode { id audio { url durationInSeconds } }  fragment ArticleTeaserFragment on Article { id tegId url rubric headline flyTitle brand byline dateFirstPublished dateline dateModified datePublished dateRevised estimatedReadTime wordCount printHeadline contentIdentity { __typename ...ContentIdentityFragment } section { tegId name } teaserImage { __typename type ...ImageTeaserFragment } leadComponent { __typename type ...ImageTeaserFragment } narration { __typename ...NarrationFragment } podcast { __typename ...PodcastAudioFragment } }  fragment OverridesFragment on Overrides { flyTitle headline rubric teaserImage { __typename ...ImageTeaserFragment } }  fragment CollectionItemFragment on CollectionItem { __typename type ... on CollectionArticleItem { article { __typename ...ArticleTeaserFragment } overrides { __typename ...OverridesFragment } } ... on CollectionRelatedArticleItem { article { __typename ...ArticleTeaserFragment } overrides { __typename ...OverridesFragment } } ... on CollectionExternalLinkItem { url overrides { __typename ...OverridesFragment } } }  fragment HomepageFragment on Homepage { components { __typename id headline type ... on StandardCollection { cta { __typename ...CtaFragment } items { __typename ...CollectionItemFragment } } ... on TakeoverCollection { cta { __typename ...CtaFragment } items { __typename ...CollectionItemFragment } } ... on DiscoverRailCollection { cta { __typename ...CtaFragment } items { __typename ...CollectionItemFragment } } ... on TopStoriesCollection { cta { __typename ...CtaFragment } items { __typename ...CollectionItemFragment } } ... on EmbedsCollection { cta { __typename ...CtaFragment } items { __typename ...CollectionItemFragment } } ... on CarouselCollection { cta { __typename ...CtaFragment } items { __typename ...CollectionItemFragment } imageLayout variant } ... on VideoCarouselCollection { cta { __typename ...CtaFragment } playlistId source fallbackStoryLink { sourceId } } ... on CoverPackageCollection { cta { __typename ...CtaFragment } items { __typename ...CollectionItemFragment } } ... on LatestEditionCollection { cta { __typename ...CtaFragment } items { __typename ...CollectionItemFragment } } ... on Newsletter { slug items { __typename ...CollectionItemFragment } } } }',  # noqa: E501
+        }
+        url = 'https://cp2-graphql-gateway.p.aws.economist.com/graphql?' + urlencode(
+            query, safe='()!', quote_via=quote
+        )
+        raw = get_content(url)
+        ans = self.economist_parse_index(raw)
         return self.economist_return_index(ans)
 
-    def economist_parse_index(self, soup):
-        script_tag = soup.find('script', id='__NEXT_DATA__')
-        if script_tag is not None:
-            data = json.loads(script_tag.string)
-            # open('/t/raw.json', 'w').write(json.dumps(data, indent=2, sort_keys=True))
-            self.description = safe_dict(
-                data, 'props', 'pageProps', 'content', 'headline'
-            )
-            self.timefmt = (
-                ' ['
-                + safe_dict(data, 'props', 'pageProps', 'content', 'formattedIssueDate')
-                + ']'
-            )
-            self.cover_url = (
-                safe_dict(data, 'props', 'pageProps', 'content', 'cover', 'url')
-                .replace(
-                    'economist.com/',
-                    'economist.com/cdn-cgi/image/width=960,quality=80,format=auto/',
-                )
-                .replace('SQ_', '')
-            )
-            self.log('Got cover:', self.cover_url)
+    def economist_parse_index(self, raw):
+        data = json.loads(raw)['data']['findHomepage']['components']
 
-            feeds = []
+        feeds = []
 
-            for part in safe_dict(
-                data, 'props', 'pageProps', 'content', 'headerSections'
-            ) + safe_dict(data, 'props', 'pageProps', 'content', 'sections'):
-                section = safe_dict(part, 'name') or ''
-                if not section:
+        for part in data:
+            if not part.get('items'):
+                continue
+            section = part.get('headline', 'Articles')
+            self.log(section)
+
+            articles = []
+
+            for art in part['items']:
+                if not art.get('article'):
                     continue
-                self.log(section)
-
-                articles = []
-
-                for ar in part['articles']:
-                    title = safe_dict(ar, 'headline') or ''
-                    url = process_url(safe_dict(ar, 'url') or '')
-                    if not title or not url:
-                        continue
-                    desc = safe_dict(ar, 'rubric') or ''
-                    sub = safe_dict(ar, 'flyTitle') or ''
-                    if sub and section != sub:
-                        desc = sub + ' :: ' + desc
-                    self.log('\t', title, '\n\t', desc, '\n\t\t', url)
-                    articles.append({'title': title, 'url': url, 'description': desc})
+                arts = art['article']
+                title = safe_dict(arts, 'headline')
+                desc = safe_dict(arts, 'rubric') or ''
+                sub = safe_dict(arts, 'flyTitle') or ''
+                if sub and section != sub:
+                    desc = sub + ' :: ' + desc
+                date_ = arts['datePublished']
+                dt = datetime.fromisoformat(date_[:-1]) + timedelta(seconds=time.timezone)
+                if (datetime.now() - dt) > timedelta(self.oldest_article):
+                    continue
+                url = process_url(arts['url'])
+                articles.append({'title': title, 'url': url, 'description': desc})
+                self.log('\t', title, '\n\t\t', desc)
+            if articles:
                 feeds.append((section, articles))
-            d = self.recipe_specific_options.get('de')
-            if d and isinstance(d, str):
-                if d.lower().strip() == 'yes':
-                    self.from_web = True
-                else:
-                    self.from_web = False
-            return feeds
-        return []
+        return feeds
 
     def preprocess_html(self, soup):
         width = '600'
@@ -362,22 +327,8 @@ class Economist(BasicNewsRecipe):
 
     def preprocess_raw_html(self, raw, url):
         # open('/t/raw.html', 'wb').write(raw.encode('utf-8'))
-        if self.from_web:
-            if '/interactive/' in url:
-                return ('<html><body><article><h1>Article not available.</h1><em>'
-                        'This article is supposed to be read in a browser.'
-                        '</em></article></body></html>')
-            root_ = parse(raw)
-            script = root_.xpath('//script[@id="__NEXT_DATA__"]')
-            html = load_article_from_json(script[0].text)
-        else:
-            html = load_article_from_json(raw)
+        html = load_article_from_web_json(raw)
         root = parse(html)
-
-        for x in root.xpath(
-            '//*[name()="script" or name()="style" or name()="source" or name()="meta"]'
-        ):
-            x.getparent().remove(x)
         # the economist uses <small> for small caps with a custom font
         for init in root.xpath('//span[@data-caps="initial"]'):
             init.set('style', 'font-weight:bold;')
@@ -387,7 +338,7 @@ class Economist(BasicNewsRecipe):
                 x.tag = 'span'
                 x.set(
                     'style',
-                    'text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.05em;',
+                    'text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.05em;'
                 )
         for h2 in root.xpath('//h2'):
             h2.tag = 'h4'
@@ -409,11 +360,10 @@ class Economist(BasicNewsRecipe):
             query, safe='()!', quote_via=quote
         )
         raw = get_content(deep_url)
+        print('got content')
         return raw
 
     def print_version(self, url):
-        if self.from_web:
-            return url
         art_cont = self.get_article(url)
         pt = PersistentTemporaryFile('.html')
         pt.write(art_cont)

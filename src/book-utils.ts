@@ -17,7 +17,7 @@ const getFileInfo = (bookName: string) => {
  * Run the economist recipe.
  */
 const economist = async () => {
-    const calibre = new Calibre();
+    const calibre = new Calibre({ log: true });
     const { outputFile, fileDate } = getFileInfo('economist');
     try {
         console.log(`Starting fetch of latest ${fileDate} economist article...`);
@@ -49,6 +49,9 @@ const nyTimes = async () => {
                 'nytimes.recipe',
                 outputFile,
             ],
+            {
+                cover: path.join('out', 'ny-times-cover.png'),
+            },
         );
     } catch (err) {
         console.log('Error occured:', err);

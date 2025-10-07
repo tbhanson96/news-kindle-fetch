@@ -1,4 +1,4 @@
-FROM node:18-bookworm
+FROM node:24-bookworm
 
 RUN apt-get update && apt-get install -y xdg-utils wget xz-utils python3-pyqt5 curl libegl1 libopengl0 libxcb-cursor0 
 RUN wget --no-check-certificate -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin
