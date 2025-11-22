@@ -1,9 +1,9 @@
-FROM node:24-bookworm
+FROM linuxserver/calibre:latest 
 
-RUN apt-get update && apt-get install -y xdg-utils wget xz-utils python3-pyqt5 curl libegl1 libopengl0 libxcb-cursor0 
-RUN wget --no-check-certificate -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin
 
-RUN apt-get install -y imagemagick
+RUN apt update
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
+RUN apt install nodejs
 
 ENV OAUTH_ID=oauth_id
 ENV OAUTH_SECRET=oauth_secret
