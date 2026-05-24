@@ -37,12 +37,12 @@ describe('uploadEpubs', () => {
         }
     });
 
-    it('uploads generated EPUBs with API authentication and Kindle delivery enabled', async () => {
-        await uploadEpubs(['out/today-nytimes.epub'], { sendToKindle: true });
+    it('uploads generated EPUBs with API authentication', async () => {
+        await uploadEpubs(['out/today-nytimes.epub']);
 
         expect(readFileMock).toHaveBeenCalledWith('out/today-nytimes.epub');
         expect(fetchMock).toHaveBeenCalledWith(
-            new URL('https://files.timbhanson.com/api/ebooks/newspapers?sendToKindle=true'),
+            new URL('https://files.timbhanson.com/api/ebooks/newspapers'),
             expect.objectContaining({
                 method: 'POST',
                 headers: { 'x-api-key': 'api-key' },

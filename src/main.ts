@@ -48,6 +48,6 @@ const options: OptionDefinition[] = [
   if (delivery === 'email') {
     await sendEpubs(results);
   } else {
-    await uploadEpubs(results, { sendToKindle: true });
+    await uploadEpubs(results);
   }
 })();

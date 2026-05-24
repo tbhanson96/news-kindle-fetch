@@ -1,8 +1,8 @@
 # News Kindle Fetcher
-Docker image for fetching the latest news articles, storing them in the Newspapers library, and sending them to Kindle.
+Docker image for fetching the latest news articles and either storing them in the Newspapers library or sending them directly to Kindle.
 
 ## Usage
-Each run must specify a delivery method (`api` or `email`) and one or more publications (`nytimes` or `economist`). API delivery uploads the generated EPUB to the Newspapers library and asks the API to deliver it to the default Kindle address. `HOMESERVER_API_KEY` is required for API delivery.
+Each run must specify a delivery method (`api` or `email`) and one or more publications (`nytimes` or `economist`). API delivery uploads the generated EPUB to the Newspapers library without emailing it to Kindle. `HOMESERVER_API_KEY` is required for API delivery.
 
 ```bash
 docker run --rm -it \
