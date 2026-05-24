@@ -1,10 +1,17 @@
 import { Calibre } from 'node-calibre';
 import nodemailer from 'nodemailer';
 import path from 'path';
+import { readFile } from 'fs/promises';
 import { exec } from 'child_process';
 import util from 'util';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
+const NEWSPAPER_UPLOAD_URL = 'https://files.timbhanson.com/api/ebooks/newspapers';
+
+type NewspaperUploadOptions = {
+    sendToKindle?: boolean;
+    sendToTori?: boolean;
+};
 
 const getFileInfo = (bookName: string) => {
     const today = new Date();
@@ -111,6 +118,49 @@ const sendEpubs = async (files: string[]) => {
     }
 };
 
+const uploadEpubs = async (files: string[], options: NewspaperUploadOptions = {}) => {
+    const apiKey = process.env.HOMESERVER_API_KEY;
+    if (!apiKey) {
+        throw new Error('Missing HOMESERVER_API_KEY for newspaper upload.');
+    }
+
+    const uploadUrl = new URL(process.env.NEWSPAPER_UPLOAD_URL ?? NEWSPAPER_UPLOAD_URL);
+    if (options.sendToKindle !== undefined) {
+        uploadUrl.searchParams.set('sendToKindle', String(options.sendToKindle));
+    }
+    if (options.sendToTori !== undefined) {
+        uploadUrl.searchParams.set('sendToTori', String(options.sendToTori));
+    }
+
+    for (const file of files) {
+        if (path.extname(file).toLowerCase() !== '.epub') {
+            throw new Error(`Only EPUB newspapers may be uploaded: ${file}`);
+        }
+
+        const form = new FormData();
+        const epub = await readFile(file);
+        form.append(
+            'file',
+            new Blob([epub], { type: 'application/epub+zip' }),
+            path.basename(file),
+        );
+
+        const response = await fetch(uploadUrl, {
+            method: 'POST',
+            headers: {
+                'x-api-key': apiKey,
+            },
+            body: form,
+        });
+
+        if (response.status !== 201) {
+            const responseBody = await response.text();
+            throw new Error(`Newspaper upload failed: ${response.status} ${responseBody}`);
+        }
+        console.log(`Successfully uploaded newspaper: ${path.basename(file)}`);
+    }
+};
+
 const createNyTimesCover = async () => {
     const today = new Date();
     let labelDate = today.toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' });
@@ -124,4 +174,4 @@ const createNyTimesCover = async () => {
     }
 };
 
-export { sendEpubs, nyTimes, economist };
+export { sendEpubs, uploadEpubs, nyTimes, economist };

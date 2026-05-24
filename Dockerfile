@@ -8,6 +8,8 @@ RUN apt install nodejs
 ENV OAUTH_ID=oauth_id
 ENV OAUTH_SECRET=oauth_secret
 ENV OAUTH_REFRESH_TOKEN=oauth_refresh_token
+ENV HOMESERVER_API_KEY=homeserver_api_key
+ENV NEWSPAPER_UPLOAD_URL=https://files.timbhanson.com/api/ebooks/newspapers
 
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
@@ -21,4 +23,4 @@ COPY economist.recipe ./
 COPY create-nytimes-cover.sh ./
 COPY nytimes.png ./
 
-ENTRYPOINT ["npm", "run", "start:prod"]
+ENTRYPOINT ["npm", "run", "start:prod", "--"]
