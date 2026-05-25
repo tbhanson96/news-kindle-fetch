@@ -16,10 +16,11 @@ WORKDIR /opt/app
 RUN mkdir out
 
 COPY package*.json ./
-RUN npm install --omit-dev
+RUN npm install --omit=dev
 COPY dist ./dist
 COPY nytimes.recipe ./
 COPY economist.recipe ./
+COPY atlantic.recipe ./
 COPY create-nytimes-cover.sh ./
 COPY nytimes.png ./
 

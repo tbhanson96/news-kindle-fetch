@@ -1,11 +1,17 @@
 import { readFile } from 'fs/promises';
-import { uploadEpubs } from '../src/book-utils';
+import { Calibre } from 'node-calibre';
+import { atlantic, uploadEpubs } from '../src/book-utils';
 
 jest.mock('fs/promises', () => ({
     readFile: jest.fn(),
 }));
+jest.mock('node-calibre', () => ({
+    Calibre: jest.fn(),
+}));
 
 const readFileMock = readFile as jest.MockedFunction<typeof readFile>;
+const calibreMock = Calibre as jest.MockedClass<typeof Calibre>;
+const calibreRunMock = jest.fn();
 const fetchMock = jest.fn();
 
 describe('uploadEpubs', () => {
@@ -73,5 +79,25 @@ describe('uploadEpubs', () => {
 
         await expect(uploadEpubs(['out/today-nytimes.epub']))
             .rejects.toThrow('Newspaper upload failed: 403 forbidden');
+    });
+});
+
+describe('atlantic', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        calibreMock.mockImplementation(() => ({
+            run: calibreRunMock,
+        } as unknown as Calibre));
+        calibreRunMock.mockResolvedValue(undefined);
+    });
+
+    it('generates an EPUB using the Atlantic recipe', async () => {
+        const outputFile = await atlantic();
+
+        expect(outputFile).toMatch(/^out\/\d+-\d+-\d+-atlantic\.epub$/);
+        expect(calibreRunMock).toHaveBeenCalledWith(
+            'ebook-convert',
+            ['atlantic.recipe', outputFile],
+        );
     });
 });

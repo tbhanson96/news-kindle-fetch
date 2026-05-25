@@ -1,4 +1,4 @@
-import { sendEpubs, uploadEpubs, nyTimes, economist } from "./book-utils";
+import { sendEpubs, uploadEpubs, nyTimes, economist, atlantic } from "./book-utils";
 import commandLineArgs, { OptionDefinition } from 'command-line-args';
 
 type DeliveryMethod = 'api' | 'email';
@@ -18,7 +18,7 @@ const options: OptionDefinition[] = [
   const delivery = args.delivery as DeliveryMethod;
 
   if (!args.book?.length) {
-    throw new Error('Missing book option. Expected nytimes or economist.');
+    throw new Error('Missing book option. Expected nytimes, economist, or atlantic.');
   }
   if (!delivery) {
     throw new Error('Missing delivery option. Expected --delivery api or --delivery email.');
@@ -36,6 +36,11 @@ const options: OptionDefinition[] = [
       }
       case 'nytimes': {
         const result = await nyTimes();
+        results.push(result!);
+        break;
+      }
+      case 'atlantic': {
+        const result = await atlantic();
         results.push(result!);
         break;
       }

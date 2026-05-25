@@ -2,7 +2,7 @@
 Docker image for fetching the latest news articles and either storing them in the Newspapers library or sending them directly to Kindle.
 
 ## Usage
-Each run must specify a delivery method (`api` or `email`) and one or more publications (`nytimes` or `economist`). API delivery uploads the generated EPUB to the Newspapers library without emailing it to Kindle. `HOMESERVER_API_KEY` is required for API delivery.
+Each run must specify a delivery method (`api` or `email`) and one or more publications (`nytimes`, `economist`, or `atlantic`). API delivery uploads the generated EPUB to the Newspapers library without emailing it to Kindle. `HOMESERVER_API_KEY` is required for API delivery.
 
 ```bash
 docker run --rm -it \
@@ -27,7 +27,7 @@ Pass multiple publication names to generate and deliver more than one EPUB in a 
 docker run --rm -it \
   -e HOMESERVER_API_KEY=key \
   -v "$(pwd)/out:/opt/app/out" \
-  news-kindle-fetch:latest --delivery api nytimes economist
+  news-kindle-fetch:latest --delivery api nytimes economist atlantic
 ```
 
 ## Delivery Methods
@@ -36,6 +36,7 @@ The application supports `--delivery api` and `--delivery email`, passed through
 
 ```bash
 npm run start:prod -- --delivery api economist
+npm run start:prod -- --delivery api atlantic
 npm run start:prod -- --delivery email economist
 npm run docker:start -- --delivery api nytimes
 ```

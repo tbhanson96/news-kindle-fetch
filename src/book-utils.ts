@@ -41,6 +41,26 @@ const economist = async () => {
 }
 
 /**
+ * Run The Atlantic calibre recipe.
+ */
+const atlantic = async () => {
+    const calibre = new Calibre({ log: true });
+    const { outputFile, fileDate } = getFileInfo('atlantic');
+    try {
+        console.log(`Starting fetch of latest ${fileDate} Atlantic issue...`);
+        await calibre.run("ebook-convert",
+            [
+                'atlantic.recipe',
+                outputFile,
+            ],
+        );
+    } catch (err) {
+        console.log('Error occured:', err);
+    }
+    return outputFile;
+}
+
+/**
  * Run the NYTimes calibre recipe.
  */
 const nyTimes = async () => {
@@ -174,4 +194,4 @@ const createNyTimesCover = async () => {
     }
 };
 
-export { sendEpubs, uploadEpubs, nyTimes, economist };
+export { sendEpubs, uploadEpubs, nyTimes, economist, atlantic };
